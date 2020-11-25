@@ -1,0 +1,43 @@
+-- 급여가 1000 미만인 사원의 급여를 1000
+SELECT ENAME , SAL,
+        CASE WHEN SAL < 1000
+             THEN 1000
+             ELSE SAL
+        END AS RSAL
+FROM EMP
+;
+
+--12월에 입시한 사람의 급여를 100%인상하여 전체사원정보를 구하시오.
+SELECT ENAME , HIREDATE,SAL,
+        DECODE(TO_CHAR(HIREDATE,'MM'),12,SAL*2,SAL) 
+FROM EMP
+;
+
+--사원 정보를 출력하시오.
+--단, 사원의 급여가 1500 이하는 소액 연봉자, 1500 최과는 고액 연봉자로 추가표시하시오.
+SELECT ENAME , HIREDATE , SAL,
+        CASE WHEN SAL<=1500
+        THEN '소액연봉자'
+        ELSE '고액연봉자'
+        END  연봉
+FROM EMP
+;
+
+--사원수
+SELECT COUNT(COMM)
+FROM EMP
+;
+
+--급여 총 합계
+SELECT SUM(SAL) , ROUND(AVG(SAL),2) , MAX(SAL) , MIN(SAL) , COUNT(SAL)
+FROM EMP
+;
+
+SELECT JOB , COUNT(*)
+FROM EMP
+GROUP BY JOB --JOB을 기준으로 데이터를 묶겠다.
+HAVING COUNT(*) >= 3
+ORDER BY COUNT(*)
+;
+
+
