@@ -1,0 +1,37 @@
+--실 수령액을 구하시오.
+--연봉 : 급여 * 12
+--상여금 : 급여 * 상여금 비율
+--실 수령액 : 연봉 + 상여금 - 세금
+--세금 : 11%
+SELECT FIRST_NAME , LAST_NAME ,
+        ((SALARY*12)+(SALARY*NVL(COMMISSION_PCT,0)))*0.89
+FROM EMPLOYEES
+WHERE MOD(TO_CHAR(HIRE_DATE,'YY'),2) = 0
+;
+------------------------------------------
+-- 업무별 급여 평균을 구하시오.
+ SELECT JOB_ID, AVG(SALARY) , COUNT(*)
+ FROM EMPLOYEES
+ GROUP BY JOB_ID
+ ORDER BY AVG(SALARY)
+ ;
+ 
+ --입사 연도별 업무별 사원 수를 구하시오
+ SELECT TO_CHAR(HIRE_DATE,'YYYY'), JOB_ID , COUNT(JOB_ID)
+ FROM EMPLOYEES
+ GROUP BY TO_CHAR(HIRE_DATE,'YYYY') , JOB_ID
+ ORDER BY TO_CHAR(HIRE_DATE,'YYYY')
+ ; 
+ --전화번호 국번별 업무별 사원수가 10 이상인 업무를 구하시오
+ SELECT  SUBSTR(PHONE_NUMBER,1,3),JOB_ID,COUNT(JOB_ID)
+ FROM EMPLOYEES
+ GROUP BY SUBSTR(PHONE_NUMBER,1,3) , JOB_ID
+ HAVING COUNT(JOB_ID)>=10
+ ORDER BY COUNT(JOB_ID)
+ ;
+ 
+ -------------------------
+ SELECT *
+ FROM EMPLOYEES
+ ;
+ 
