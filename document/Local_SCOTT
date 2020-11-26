@@ -161,5 +161,53 @@ GROUP BY JOB --JOB을 기준으로 데이터를 묶겠다.
 HAVING COUNT(*) >= 3
 ORDER BY COUNT(*)
 ;
+-----------------------------------------------------------------------------------------------
+-----------------------------------11월26일----------------------------------------------------
+-----------------------------------------------------------------------------------------------
+SELECT ENAME , SAL,
+       ROW_NUMBER() OVER (ORDER BY SAL DESC) AS RNUM,
+       RANK() OVER (ORDER BY SAL DESC) AS RNK,
+       DENSE_RANK() OVER (ORDER BY SAL DESC) AS DRNK
+FROM EMP
+;
+
+--업무별 급여순위
+SELECT ENAME , JOB , SAL,
+        RANK() OVER (PARTITION BY JOB ORDER BY SAL DESC) AS RNK
+FROM EMP
+;
+
+
+--업무별 급여 평균 순위를 구하시오.
+SELECT JOB,AVG(SAL), RANK() OVER(ORDER BY AVG(SAL)DESC) AS RNK
+FROM EMP
+GROUP BY JOB
+;
+
+SELECT E.* , D.*
+FROM EMP E INNER JOIN DEPT D
+                    ON E.DEPTNO = D.DEPTNO
+;
+
+--급여 등급이 1등급인 사원들을 구하시오.
+SELECT E.* , S.*
+FROM EMP E INNER JOIN SALGRADE S
+                ON GRADE = 1  AND E.SAL BETWEEN S.LOSAL AND S.HISAL
+;
+
+
+--사원들의 상급자를 구하시오.
+SELECT E1.ENAME, E1.MGR , E2.ENAME , E2.EMPNO
+FROM EMP E1 LEFT OUTER JOIN EMP E2
+                ON E1.MGR = E2.EMPNO
+;
+
+SELECT E.* , D.* , SG.*
+FROM EMP E INNER JOIN DEPT D
+                    ON E.DEPTNO = D.DEPTNO
+            INNER JOIN SALGRADE SG
+                    ON E.SAL BETWEEN SG.LOSAL AND SG.HISAL
+;
+
 
 
