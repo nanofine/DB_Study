@@ -1,3 +1,125 @@
+------------------------------11월 23,24일------------------------------
+-- 띄어쓰기 할 때 '이 름' 사용 
+SELECT ENAME AS 이름 , JOB AS 업무 , HIREDATE AS 입사일, SAL AS 급여
+FROM EMP
+WHERE ENAME LIKE  'A%A%'
+;
+
+SELECT ENAME AS 이름 , JOB AS 업무 , SAL AS 급여
+FROM EMP
+WHERE SAL NOT IN(1500 , 3000 , 5000)
+--NOT IN : 포함 안됨  , IN : 포함
+;
+
+SELECT CEIL ( 1 / 3 ) AS 올림,
+        FLOOR ( 1 / 3 ) AS 버림,
+        ROUND ( 1 / 3 ) AS 반올림,
+        ROUND(1 / 3 ,2), --,2 : 자리수 까지 반올림 한다.  .을 기준으로 오른쪽으로 1,2,3 왼쪽으로 -1 , -2 ,-3
+        ROUND(123.4567 ,-2),
+        MOD( 10 , 6) AS 나머지
+FROM DUAL
+--DUAL : 임시 테이블
+;
+
+-- || : 이어준다
+SELECT 'HELLO' || 'WORLD!!'
+FROM DUAL
+;
+--CONCAT(문자열1,문자열2) : 문자열 1,2 를 붙일수있다. 3개를 쓸려면 CONCAT을 CONCAT으로 감싼다.
+SELECT CONCAT('HELLO' , 'WORLD!!')
+FROM DUAL
+;
+--SUBSTR(값,숫자1,숫자2) : 값에서 숫자1번째 글자부터 숫자2 개를 자른다.
+SELECT SUBSTR('HELLO WORLD!!',8,3 )
+FROM DUAL
+;
+--길이
+SELECT LENGTH('HELLO WORLD!!')
+FROM DUAL
+;
+-- 바꾸기
+SELECT REPLACE('HELLO WORLD!!' ,'L','K')
+FROM DUAL
+;
+--TRANSLATE(값1,문자열1,문자열2) : 값1에서 문자열1의 각 위치의 값을 문자열2의 각 위치의 값으로 바꾼다.
+SELECT TRANSLATE('HELLO WORLD!!' , 'HO','KA') -- HELLO WORLD!! -> KELLA WARLD!!
+FROM DUAL
+;
+--찾기
+--INSTR(값1,값2,숫자1,숫자2) : 값1에서 값2의 위치를 찾는다 , 숫자1번째부터 찾는다, 숫자2개째 위치를 찾는다.
+SELECT  INSTR('HELLO WORLD!!' , 'L',4,2)
+FROM DUAL
+;
+
+--공백제거
+-- LTRIM(값1 , 값2) : 값1에서 왼쪽에 값2의 형태가 있는 경우 해당 내용을 지운다.
+SELECT TRIM('         HELLO WORLD!!      ')
+FROM DUAL
+;
+SELECT LTRIM('         HELLO WORLD!!      ')
+FROM DUAL
+;
+SELECT RTRIM('         HELLO WORLD!!      ')
+FROM DUAL
+;
+--채우기
+--LPAD(값1 , 숫자1,값2) 값1의 글자수가 숫자1 개 만큼 될때까지 왼쪽에 값2로 채운다.
+SELECT LPAD(23,6,0)
+FROM DUAL
+;
+--대소문자변환
+SELECT UPPER('hello world!!')
+FROM DUAL
+;
+SELECT LOWER('hello world!!')
+FROM DUAL
+;
+-- SYSDATER : 현재 날짜
+-- ORACLE : SYSDATE , MYSQL:NOW() , MSSQL:GETDATE()
+SELECT SYSDATE
+FROM DUAL
+;
+--TO_CHAR(값,형태값)
+--Y : 연도  , M:월 , D:일
+--DAY : 요일 , DY:요일(약어) , D : 주중에 몇번째 일인가
+--AM : 오전오후 , PM : 오전오후
+-- HH : 시간 (12시간기준) , HH24:(24시간기준)
+--MI : 분 , SS : 초
+SELECT TO_CHAR(SYSDATE,'YYYY/MM/DD  DAY DY AM PM HH:MI:SS')
+FROM DUAL
+;
+-- Q : 분기
+-- W : 월의 몇번째 주
+-- WW : 년의 몇번째 주(무조건 1월1일 요일기준으로 7일)
+-- IW : 년의 몇번째 주(월요일 기준 1증가)
+SELECT TO_CHAR(SYSDATE,'Q/W/WW/IW')
+FROM DUAL
+;
+-- 9 : 숫자, 자동반올림
+-- L : 현재 설치된 시스템 지정 국가코드
+SELECT TO_CHAR(123456,'L999,999')
+FROM DUAL
+;
+-- TO)DATE(값) :  값이 날짜형태인 경우 날짜로 변환
+SELECT TO_DATE('2020-12-25')
+FROM DUAL
+;
+
+SELECT *
+FROM EMP
+WHERE MOD(TO_CHAR(HIREDATE,'MM') , 2) = 1
+;
+
+-- IS NULL : NULL인 것들
+-- IS NOT NULL: NULL이 아닌것들
+-- 값 + NULL : 비어있는 것을 더할 수 없기 때문에 NULL
+-- NVL(값1 , 값2) : 값1 이 NULL이면 값2로 대체
+--
+SELECT ENAME,SAL, COMM, (SAL*12) AS 연봉 ,
+         ROUND((SAL*12+NVL(COMM,0))*0.89) AS 실수령 
+FROM EMP
+;
+
 -- 급여가 1000 미만인 사원의 급여를 1000
 SELECT ENAME , SAL,
         CASE WHEN SAL < 1000
@@ -6,7 +128,7 @@ SELECT ENAME , SAL,
         END AS RSAL
 FROM EMP
 ;
-
+-------------------------------11월25일-----------------------------------------------------------
 --12월에 입시한 사람의 급여를 100%인상하여 전체사원정보를 구하시오.
 SELECT ENAME , HIREDATE,SAL,
         DECODE(TO_CHAR(HIREDATE,'MM'),12,SAL*2,SAL) 
