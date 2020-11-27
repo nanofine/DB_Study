@@ -67,3 +67,14 @@ FROM EMPLOYEES E INNER JOIN DEPARTMENTS D
 SELECT
 FROM 
 ;
+
+-----------------------------------------------------------------------------------------------
+-----------------------------------11월27일----------------------------------------------------
+----------------------------------------------------------------------------------------------
+SELECT d.department_name ,COUNT(*)
+FROM  EMPLOYEES E INNER JOIN DEPARTMENTS D 
+                        ON E.DEPARTMENT_ID = D.DEPARTMENT_ID
+                    INNER JOIN LOCATIONS S
+                        ON S.CITY = 'Seattle' AND D.LOCATION_ID = S.LOCATION_ID
+GROUP BY d.department_name
+;
