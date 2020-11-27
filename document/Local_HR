@@ -67,14 +67,27 @@ FROM EMPLOYEES E INNER JOIN DEPARTMENTS D
 SELECT
 FROM 
 ;
-
 -----------------------------------------------------------------------------------------------
 -----------------------------------11월27일----------------------------------------------------
 ----------------------------------------------------------------------------------------------
+--시애틀에서 근무하는 부서별 사원수를 구하시오
+
 SELECT d.department_name ,COUNT(*)
 FROM  EMPLOYEES E INNER JOIN DEPARTMENTS D 
                         ON E.DEPARTMENT_ID = D.DEPARTMENT_ID
                     INNER JOIN LOCATIONS S
                         ON S.CITY = 'Seattle' AND D.LOCATION_ID = S.LOCATION_ID
 GROUP BY d.department_name
+;
+
+--상급자들의 부하직원 수를 구하시오.
+SELECT e1.first_name ,J.JOB_TITLE , d.department_name , COUNT(*)
+FROM EMPLOYEES E1 INNER JOIN EMPLOYEES E2
+                        ON E1.EMPLOYEE_ID = E2.MANAGER_ID
+                INNER JOIN DEPARTMENTS D
+                        ON E1.DEPARTMENT_ID = D.DEPARTMENT_ID
+                INNER JOIN JOBS J
+                        ON j.job_id = e1.job_id
+GROUP BY e1.first_name  , d.department_name ,J.JOB_TITLE
+ORDER BY COUNT(*)
 ;
