@@ -210,4 +210,64 @@ FROM EMP E INNER JOIN DEPT D
 ;
 
 
+-----------------------------------------------------------------------------------------------
+-----------------------------------11월27일----------------------------------------------------
+----------------------------------------------------------------------------------------------
+
+SELECT ENAME , '1'
+FROM EMP
+UNION ALL
+SELECT ENAME, '2'
+FROM EMP
+;
+SELECT E.* , emp.hiredate
+FROM(SELECT ENAME , SAL , 
+        RANK() OVER(ORDER BY SAL DESC) RNK
+    FROM EMP) E INNER JOIN EMP
+            ON E.ENAME = EMP.ENAME
+WHERE E.RNK <= 3 
+ORDER BY HIREDATE
+;
+
+--사원 정보와 모든 부서의 개수를 구하시오.
+-- 1 = 1로 단순 조인일 경우 서브쿼리 결과는 단일 ROW이어야 한다.
+SELECT E.*, D.CNT
+FROM EMP E INNER JOIN (SELECT COUNT(*) AS CNT
+                        FROM DEPT) D
+                ON 1 = 1
+;
+--절대값 : abs
+SELECT ABS(-7)
+FROM DUAL
+;
+
+--인원이 가장 많은 급여등급을 구하시오
+SELECT D.*
+FROM(SELECT  GRADE , COUNT(GRADE) , RANK() OVER (ORDER BY COUNT(GRADE) DESC) AS 등수
+      FROM (EMP E INNER JOIN SALGRADE S
+                        ON E.SAL BETWEEN S.LOSAL AND S.HISAL)
+            GROUP BY GRADE
+            ) D
+WHERE D.등수 = 1
+;
+
+--부서별 급여 순위1위인 사원의 사원정보를 구하시오.
+SELECT D.*
+FROM  (SELECT EMP.*, RANK() OVER(PARTITION BY DEPT.DNAME ORDER BY SAL DESC) AS 급여랭킹 ,DEPT.DNAME
+            FROM EMP INNER JOIN DEPT
+                    ON  EMP.DEPTNO = DEPT.DEPTNO
+            ) D 
+WHERE D.급여랭킹 = 1
+ORDER BY D.SAL DESC
+;
+
+--연도별 입사자가 가장 많은 업무를 구하시오.
+SELECT YEAR ,JOB, CNT 
+FROM(
+SELECT TO_CHAR(HIREDATE ,'YYYY') AS YEAR, COUNT(*)AS CNT, JOB ,RANK() OVER(PARTITION BY TO_CHAR(HIREDATE ,'YYYY') ORDER BY COUNT(*) DESC) AS RNK
+FROM emp
+group by TO_CHAR(HIREDATE ,'YYYY') , JOB
+)
+WHERE RNK = 1
+;
 
