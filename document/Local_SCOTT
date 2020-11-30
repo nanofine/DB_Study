@@ -270,4 +270,63 @@ group by TO_CHAR(HIREDATE ,'YYYY') , JOB
 )
 WHERE RNK = 1
 ;
+-----------------------------------------------------------------------------------------------
+-----------------------------------11월27일----------------------------------------------------
+----------------------------------------------------------------------------------------------
+--홀수월과 짝수월에 입사한 사원들의 굽여평균을 구하고 그 차이를 구하시오.
+SELECT  홀수-짝수
+FROM (SELECT AVG(SAL) AS 홀수
+        FROM EMP
+        WHERE MOD(TO_CHAR(HIREDATE,'MM'),2) = 1) HOL           
+     INNER JOIN(SELECT AVG(SAL) AS 짝수
+                FROM EMP
+                WHERE MOD(TO_CHAR(HIREDATE,'MM'),2) = 0) JJAK
+                ON 1=1         
+;
+--급여등급이 2,4 등급인 사원이 가장 많은 부서의 업무별 급여합계 순위를 구하시오.
+SELECT D2.DNAME , JOB ,SUM(SAL) , RANK() OVER(PARTITION BY D2.DNAME ORDER BY SUM(SAL) DESC) RNK
+FROM EMP E2 INNER JOIN DEPT D2
+            ON E2.DEPTNO = D2.DEPTNO
+            INNER JOIN  
+                  (SELECT DNAME ,COUNT(*), RANK() OVER(ORDER BY COUNT(*)DESC )AS RNK
+                        FROM EMP E1 INNER JOIN SALGRADE SA
+                              ON E1.SAL BETWEEN SA.LOSAL AND SA.HISAL
+                  INNER JOIN DEPT D1
+                             ON E1.DEPTNO = D1.DEPTNO
+                 WHERE GRADE = 2 OR GRADE = 4
+                 GROUP BY DNAME
+               ) A2
+                ON D2.DNAME = A2.DNAME 
+                AND A2.RNK = 1
+GROUP BY JOB , D2.DNAME 
+;
+
+SELECT DISTINCT E.*
+FROM(SELECT *
+    FROM EMP
+    UNION
+    SELECT *
+    FROM EMP) E
+    ;
+
+SELECT * 
+FROM    (SELECT DNAME, HIREDATE , JOB , SAL*0.8 AS 실수령액 ,RANK() OVER(PARTITION BY JOB ORDER BY SAL*0.8 DESC) RNK
+            FROM EMP E1 INNER JOIN (SELECT  E.DEPTNO,D.DNAME, COUNT(*) , RANK() OVER(ORDER BY COUNT(*) DESC) RNK
+                        FROM EMP  E  INNER JOIN DEPT D
+                        ON E.DEPTNO = D.DEPTNO
+                        WHERE MOD(TO_CHAR(HIREDATE,'MM'),2) = 0
+                    GROUP BY d.dname ,  E.DEPTNO) A1
+                    ON E1.DEPTNO = A1.DEPTNO
+                        WHERE RNK = 1 AND JOB = 'MANAGER'
+                    UNION
+                    SELECT DNAME, HIREDATE , JOB , SAL*0.95 AS 실수령액 ,RANK() OVER( PARTITION BY JOB ORDER BY SAL*0.95 DESC) RNK
+                    FROM EMP E1 INNER JOIN (SELECT  E.DEPTNO,D.DNAME, COUNT(*) , RANK() OVER(ORDER BY COUNT(*) DESC) RNK
+                        FROM EMP  E  INNER JOIN DEPT D
+                        ON E.DEPTNO = D.DEPTNO
+                        WHERE MOD(TO_CHAR(HIREDATE,'MM'),2) = 0
+                    GROUP BY d.dname ,  E.DEPTNO) A1
+                    ON E1.DEPTNO = A1.DEPTNO
+                    WHERE RNK = 1 AND JOB != 'MANAGER')
+ORDER BY JOB
+;           
 
