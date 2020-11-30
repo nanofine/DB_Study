@@ -91,3 +91,51 @@ FROM EMPLOYEES E1 INNER JOIN EMPLOYEES E2
 GROUP BY e1.first_name  , d.department_name ,J.JOB_TITLE
 ORDER BY COUNT(*)
 ;
+
+-----------------------------------------------------------------------------------------------
+-----------------------------------11월28일----------------------------------------------------
+----------------------------------------------------------------------------------------------
+SELECT *
+FROM (SELECT E1.* , RANK() OVER(ORDER BY SALARY DESC) RNK
+            FROM EMPLOYEES E1)
+WHERE RNK BETWEEN 1 AND 20
+;
+SELECT COUNTRY_NAME , CITY
+FROM EMPLOYEES E2 INNER JOIN (SELECT FIRST_NAME AS 부하직원 , MANAGER_ID
+                              FROM (SELECT E1.* , RANK() OVER(ORDER BY SALARY DESC) RNK
+                                      FROM EMPLOYEES E1)
+                            WHERE RNK BETWEEN 1 AND 20) A1
+                            ON E2.EMPLOYEE_ID = A1.MANAGER_ID
+                            INNER JOIN DEPARTMENTS D1
+                            ON E2.DEPARTMENT_ID = D1.DEPARTMENT_ID
+                            INNER JOIN LOCATIONS L1
+                            ON D1.LOCATION_ID = L1.LOCATION_ID
+                            INNER JOIN COUNTRIES C1
+                            ON L1.COUNTRY_ID = C1.COUNTRY_ID
+GROUP BY COUNTRY_NAME , CITY
+;
+
+
+SELECT EMPLOYEE_ID ,FIRST_NAME ,DEPARTMENT_ID
+FROM EMPLOYEES E2 INNER JOIN (SELECT FIRST_NAME AS 부하직원 , MANAGER_ID , EMPLOYEE_ID AS EMID
+                              FROM (SELECT E1.* , RANK() OVER(ORDER BY SALARY DESC) RNK
+                                      FROM EMPLOYEES E1)
+                            WHERE RNK BETWEEN 1 AND 20) A1
+                            ON E2.EMPLOYEE_ID = A1.MANAGER_ID
+GROUP BY EMPLOYEE_ID , FIRST_NAME,DEPARTMENT_ID
+;
+SELECT 상사, C1.COUNTRY_NAME AS 나라 , L1.CITY AS 도시
+FROM        (SELECT EMPLOYEE_ID ,FIRST_NAME AS 상사,DEPARTMENT_ID AS DD
+                    FROM EMPLOYEES E2 INNER JOIN (SELECT FIRST_NAME AS 부하직원 , MANAGER_ID , EMPLOYEE_ID AS EMID
+                              FROM (SELECT E1.* , RANK() OVER(ORDER BY SALARY DESC) RNK
+                                      FROM EMPLOYEES E1)
+                            WHERE RNK BETWEEN 1 AND 20) A1
+                            ON E2.EMPLOYEE_ID = A1.MANAGER_ID
+                    GROUP BY EMPLOYEE_ID , FIRST_NAME,DEPARTMENT_ID) B1
+                    INNER JOIN DEPARTMENTS D1
+                    ON DD = d1.department_id
+                     INNER JOIN LOCATIONS L1
+                    ON D1.LOCATION_ID = L1.LOCATION_ID
+                    INNER JOIN COUNTRIES C1
+                    ON L1.COUNTRY_ID = C1.COUNTRY_ID
+;
