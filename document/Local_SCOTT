@@ -329,4 +329,90 @@ FROM    (SELECT DNAME, HIREDATE , JOB , SAL*0.8 AS 실수령액 ,RANK() OVER(PAR
                     ON E1.DEPTNO = A1.DEPTNO
                     WHERE RNK = 1 AND JOB != 'MANAGER')
 ORDER BY JOB
+;         
+
+-----------------------------------------------------------------------------------------------
+-----------------------------------12월1일----------------------------------------------------
+----------------------------------------------------------------------------------------------
+
+--이름에 S가 들어가고 사번이 7500이상이며 , 근무지가 뉴욕이 아닌 점원들의 급여등급을 구하시오
+
+SELECT *
+FROM EMP
+WHERE ENAME LIKE '%S%' AND MGR >= 7500
+;
+SELECT E1.EMPNO AS 사번 , E1.ENAME AS 이름 ,E1.SAL AS 급여 , D1.DEPTNO AS 부서번호, D1.DNAME AS 부서 ,S1.GRADE
+FROM EMP E1 INNER JOIN DEPT D1
+            ON E1.DEPTNO = D1.DEPTNO
+            INNER JOIN SALGRADE S1
+            ON E1.SAL BETWEEN S1.LOSAL AND S1.HISAL
+WHERE D1.LOC != 'NEW YORK' AND E1.ENAME LIKE '%S%' AND E1.EMPNO >= 7500
+ORDER BY S1.GRADE ASC, 급여 DESC , 부서번호 ASC --같은 순서의 경우 그 다음 정렬을 사용
+;
+
+--업무가 SALESMAN인 직원이 2명 이상인 부서의 이름, 근무하는 사원의 이름, 업무를 출력하시오.
+--컬럼명 : 부서명 , 사원명 , 업무
+
+SELECT D.DNAME AS 부서명 , E.ENAME AS 사원명, E.JOB AS 업무
+FROM EMP E INNER JOIN DEPT D
+                   ON E.DEPTNO = D.DEPTNO
+            INNER JOIN(
+                        SELECT DEPTNO
+                        FROM EMP 
+                        WHERE JOB = 'SALESMAN'
+                        GROUP BY DEPTNO
+                        HAVING COUNT(*) > 1) S
+                    ON E.DEPTNO = S.DEPTNO
+;
+
+--짝수월의 입사자가 가장 많은 부서의 업무별 연봉 순위
+-- 출력결과 : 부서명 , 입사일 , 업무 , 실 수령액, 연봉순위
+--실수령액 = 급여 - 세금
+-- 세금은 5% , MANAGER만 20%
+
+SELECT * 
+FROM    (SELECT DNAME, HIREDATE , JOB , SAL*0.8 AS 실수령액 ,RANK() OVER(PARTITION BY JOB ORDER BY SAL*0.8 DESC) RNK
+            FROM EMP E1 INNER JOIN (SELECT  E.DEPTNO,D.DNAME, COUNT(*) , RANK() OVER(ORDER BY COUNT(*) DESC) RNK
+                        FROM EMP  E  INNER JOIN DEPT D
+                        ON E.DEPTNO = D.DEPTNO
+                        WHERE MOD(TO_CHAR(HIREDATE,'MM'),2) = 0
+                    GROUP BY d.dname ,  E.DEPTNO) A1
+                    ON E1.DEPTNO = A1.DEPTNO
+                        WHERE RNK = 1 AND JOB = 'MANAGER'
+                    UNION
+                    SELECT DNAME, HIREDATE , JOB , SAL*0.95 AS 실수령액 ,RANK() OVER( PARTITION BY JOB ORDER BY SAL*0.95 DESC) RNK
+                    FROM EMP E1 INNER JOIN (SELECT  E.DEPTNO,D.DNAME, COUNT(*) , RANK() OVER(ORDER BY COUNT(*) DESC) RNK
+                        FROM EMP  E  INNER JOIN DEPT D
+                        ON E.DEPTNO = D.DEPTNO
+                        WHERE MOD(TO_CHAR(HIREDATE,'MM'),2) = 0
+                    GROUP BY d.dname ,  E.DEPTNO) A1
+                    ON E1.DEPTNO = A1.DEPTNO
+                    WHERE RNK = 1 AND JOB != 'MANAGER')
+ORDER BY JOB
 ;           
+---------------------강사님 버전-----------------------------------
+SELECT D.DNAME , E.HIREDATE,E.JOB,DECODE(E.JOB,'MANAGER',E.SAL*0.8 , E.SAL*0.95) AS RSAL 
+,   RANK() OVER (PARTITION BY JOB ORDER BY DECODE(E.JOB,'MANAGER',E.SAL*0.8 , E.SAL*0.95) DESC) AS RNK
+FROM EMP E INNER JOIN DEPT D
+                    ON E.DEPTNO = D.DEPTNO
+            INNER JOIN (SELECT DEPTNO , COUNT(*) AS CNT , RANK() OVER(ORDER BY COUNT(*) DESC) RNK
+                        FROM EMP 
+                        WHERE MOD(TO_CHAR(HIREDATE,'MM'),2) = 0
+                        GROUP BY DEPTNO) S
+                    ON E.DEPTNO = S.DEPTNO
+                    AND S.RNK = 1
+;
+
+
+--ALLEN과 같은 부서 사원들을 높은 급여순으로 나열
+SELECT E.ENAME , E.SAL
+FROM EMP E INNER JOIN (SELECT DEPTNO
+                        FROM EMP
+                        WHERE ENAME='ALLEN') A
+                    ON E.DEPTNO = A.DEPTNO
+ORDER BY E.SAL DESC
+;
+
+
+
+
