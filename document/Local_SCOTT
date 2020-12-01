@@ -271,7 +271,7 @@ group by TO_CHAR(HIREDATE ,'YYYY') , JOB
 WHERE RNK = 1
 ;
 -----------------------------------------------------------------------------------------------
------------------------------------11월27일----------------------------------------------------
+-----------------------------------11월30일----------------------------------------------------
 ----------------------------------------------------------------------------------------------
 --홀수월과 짝수월에 입사한 사원들의 굽여평균을 구하고 그 차이를 구하시오.
 SELECT  홀수-짝수
@@ -309,6 +309,7 @@ FROM(SELECT *
     FROM EMP) E
     ;
 
+
 SELECT * 
 FROM    (SELECT DNAME, HIREDATE , JOB , SAL*0.8 AS 실수령액 ,RANK() OVER(PARTITION BY JOB ORDER BY SAL*0.8 DESC) RNK
             FROM EMP E1 INNER JOIN (SELECT  E.DEPTNO,D.DNAME, COUNT(*) , RANK() OVER(ORDER BY COUNT(*) DESC) RNK
@@ -329,4 +330,3 @@ FROM    (SELECT DNAME, HIREDATE , JOB , SAL*0.8 AS 실수령액 ,RANK() OVER(PAR
                     WHERE RNK = 1 AND JOB != 'MANAGER')
 ORDER BY JOB
 ;           
-
