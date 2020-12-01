@@ -111,3 +111,154 @@ FROM        (SELECT EMPLOYEE_ID ,FIRST_NAME AS 상사,DEPARTMENT_ID AS DD
                     ON D1.LOCATION_ID = L1.LOCATION_ID
                     INNER JOIN COUNTRIES C1
                     ON L1.COUNTRY_ID = C1.COUNTRY_ID
+          
+-----------------------------------------------------------------------------------------------
+-----------------------------------12월01일----------------------------------------------------
+----------------------------------------------------------------------------------------------
+--대륙별 사원의 급여 랭킹 3위까지 구하시오
+
+SELECT *
+FROM (SELECT R1.REGION_NAME , E1.FIRST_NAME , E1.SALARY , RANK() OVER(PARTITION BY R1.REGION_NAME  ORDER BY SALARY DESC) RNK
+      FROM EMPLOYEES E1 INNER JOIN DEPARTMENTS D1
+                  ON E1.DEPARTMENT_ID = D1.DEPARTMENT_ID
+                  INNER JOIN LOCATIONS L1
+                  ON D1.LOCATION_ID = L1.LOCATION_ID
+                  INNER JOIN COUNTRIES C1
+                  ON L1.COUNTRY_ID = C1.COUNTRY_ID
+                  INNER JOIN REGIONS R1
+                  ON R1.REGION_ID = C1.REGION_ID)
+WHERE RNK BETWEEN 1 AND 3
+;
+
+--부하 직원의 수가 많은 상사 1위의 부서
+--그 부서에 해당하는 직원들의 연봉의 최소값, 최대값 에 해당하는 직원의 도시를 구하시오.
+--연봉= 급여*커미션*세금
+--급여20000이상인 직원은 세금 20프로 나머지는 10프로
+SELECT  A2.* ,
+        CASE WHEN A2.SALARY<20000
+            THEN A2.SALARY*12*NVL(COMMISSION_PCT,1)*0.9
+            ELSE A2.SALARY*12*NVL(COMMISSION_PCT,1)*0.8
+            END AS 연봉
+FROM    ( SELECT E2.* , L1.CITY as 사는도시
+          FROM EMPLOYEES E2 INNER JOIN (SELECT E1.EMPLOYEE_ID ,E1.DEPARTMENT_ID, COUNT(*) , RANK() OVER (ORDER BY COUNT(*) DESC) RNK
+                                        FROM EMPLOYEES E1 INNER JOIN EMPLOYEES E2
+                                                                ON E1.EMPLOYEE_ID = E2.MANAGER_ID
+                                        GROUP BY E1.EMPLOYEE_ID , E1.DEPARTMENT_ID) A1         
+                            ON E2.DEPARTMENT_ID = A1.DEPARTMENT_ID
+                            INNER JOIN DEPARTMENTS D1
+                            ON E2.DEPARTMENT_ID = D1.DEPARTMENT_ID
+                            INNER JOIN LOCATIONS L1
+                            ON L1.LOCATION_ID = D1.LOCATION_ID
+            WHERE A1.RNK = 1) A2
+            INNER JOIN (
+            SELECT MAX(E2.SALARY) AS 최대값, MIN(E2.SALARY) as 최소값
+                    FROM EMPLOYEES E2 INNER JOIN (SELECT E1.EMPLOYEE_ID ,E1.DEPARTMENT_ID, COUNT(*) , RANK() OVER (ORDER BY COUNT(*) DESC) RNK
+                                                FROM EMPLOYEES E1 INNER JOIN EMPLOYEES E2
+                                                                        ON E1.EMPLOYEE_ID = E2.MANAGER_ID
+                                                GROUP BY E1.EMPLOYEE_ID , E1.DEPARTMENT_ID) A1         
+                                    ON E2.DEPARTMENT_ID = A1.DEPARTMENT_ID
+                    WHERE A1.RNK = 1) A3
+                    ON A2.SALARY = A3.최대값 or A2.SALARY = A3.최소값
+;
+SELECT AVG(SALARY)
+                            FROM EMPLOYEES E1 INNER JOIN DEPARTMENTS D1
+                                            ON E1.DEPARTMENT_ID = D1.DEPARTMENT_ID
+                            WHERE D1.DEPARTMENT_NAME = 'IT';
+                            
+--부하 직원의 수가 많은 상사 1위의 부서
+--그 부서에 해당하는 직원들 급여와 도시를 구하시오.
+--연봉=(급여*12*세금)+커미션
+--세금=10프로
+SELECT E.FIRST_NAME AS 이름,L.CITY AS 도시,((E.SALARY*12)*0.9+NVL(E.COMMISSION_PCT,0)) AS 연봉
+FROM(SELECT E1.EMPLOYEE_ID,D.DEPARTMENT_ID, COUNT(*), RANK() OVER(ORDER BY COUNT(*) DESC) AS RNK
+            FROM EMPLOYEES E1 INNER JOIN EMPLOYEES E2
+                                    ON E1.EMPLOYEE_ID=E2.MANAGER_ID 
+                              INNER JOIN DEPARTMENTS D 
+                                    ON E1.DEPARTMENT_ID=D.DEPARTMENT_ID
+            GROUP BY E1.EMPLOYEE_ID,D.DEPARTMENT_ID) A 
+                              INNER JOIN EMPLOYEES E 
+                                    ON A.DEPARTMENT_ID = E.DEPARTMENT_ID 
+                              INNER JOIN DEPARTMENTS D 
+                                    ON E.DEPARTMENT_ID=D.DEPARTMENT_ID
+                              INNER JOIN LOCATIONS L
+                                    ON L.LOCATION_ID=D.LOCATION_ID
+WHERE A.RNK=1
+;
+--인사팀
+--전체 평균 급여가 'IT' 부서의 평균급여보다 많고, 'Accounting' 부서의 평균 급여보다 적은 부서의 정보를 급여 평균 랭킹순으로 나열하시오
+SELECT *
+FROM (SELECT D1.DEPARTMENT_NAME, E1.DEPARTMENT_ID ,  FLOOR (AVG(SALARY)) , RANK() OVER( ORDER BY AVG(SALARY) DESC) RNK
+    FROM EMPLOYEES E1 INNER JOIN DEPARTMENTS D1
+                        ON E1.DEPARTMENT_ID = D1.DEPARTMENT_ID
+    GROUP BY E1.DEPARTMENT_ID , D1.DEPARTMENT_NAME
+    HAVING AVG(SALARY) >(SELECT AVG(SALARY)
+                            FROM EMPLOYEES E1 INNER JOIN DEPARTMENTS D1
+                                            ON E1.DEPARTMENT_ID = D1.DEPARTMENT_ID
+                            WHERE D1.DEPARTMENT_NAME = 'IT')
+                            AND
+                            AVG(SALARY) < (SELECT AVG(SALARY)
+                            FROM EMPLOYEES E1 INNER JOIN DEPARTMENTS D1
+                                            ON E1.DEPARTMENT_ID = D1.DEPARTMENT_ID
+                            WHERE D1.DEPARTMENT_NAME = 'Accounting'))
+ORDER BY RNK
+;
+
+-- 이름에 J가 들어가는 사원이 2번째로 적은 부서의 업무별 급여 평균 순위
+
+SELECT A2.DEPARTMENT_NAME ,J1.JOB_TITLE ,AVG(SALARY)as 급여 , RANK() OVER (ORDER BY AVG(SALARY) DESC) 랭크
+FROM EMPLOYEES E2 INNER JOIN (SELECT *
+                                FROM    (SELECT D1.DEPARTMENT_ID,D1.DEPARTMENT_NAME , COUNT(*) , RANK() OVER(ORDER BY COUNT(*)) RNK
+                                        FROM EMPLOYEES E1 INNER JOIN DEPARTMENTS D1
+                                                                    ON E1.DEPARTMENT_ID = D1.DEPARTMENT_ID
+                                        WHERE E1.FIRST_NAME LIKE '%J%' OR E1.LAST_NAME LIKE '%J%'
+                                        GROUP BY D1.DEPARTMENT_NAME,D1.DEPARTMENT_ID) A1
+                                WHERE RNK = 2) A2
+                ON E2.DEPARTMENT_ID = A2.DEPARTMENT_ID
+                INNER JOIN JOBS J1
+                ON E2.JOB_ID = J1.JOB_ID
+GROUP BY A2.DEPARTMENT_ID ,A2.DEPARTMENT_NAME, J1.JOB_TITLE
+;                   
+--아메리카 출신 사람들 중에서 제일 높은 급여를 받는 사람의 연봉(세금28%)와
+--유럽 출신 사람들 중에서ㅗ 제일 낮은 급여를 받는 사람의 연봉(세금34%)의 합을 구하시오.
+SELECT SUM(연봉)
+FROM (SELECT *
+        FROM (SELECT E1.SALARY*0.72 AS 연봉, R1.REGION_NAME , RANK() OVER(ORDER BY SALARY DESC) RNK
+                FROM EMPLOYEES E1 INNER JOIN DEPARTMENTS D1
+                                        ON E1.DEPARTMENT_ID = D1.DEPARTMENT_ID
+                                    INNER JOIN LOCATIONS L1
+                                        ON D1.LOCATION_ID = L1.LOCATION_ID
+                                    INNER JOIN COUNTRIES C1
+                                        ON L1.COUNTRY_ID = C1.COUNTRY_ID
+                                    INNER JOIN REGIONS R1
+                                        ON C1.REGION_ID = R1.REGION_ID
+                WHERE R1.REGION_NAME = 'Americas')
+        WHERE RNK = 1
+        UNION
+        SELECT *
+        FROM (SELECT E1.SALARY*0.66 AS 연봉, R1.REGION_NAME , RANK() OVER(ORDER BY SALARY ) RNK
+                FROM EMPLOYEES E1 INNER JOIN DEPARTMENTS D1
+                                        ON E1.DEPARTMENT_ID = D1.DEPARTMENT_ID
+                                    INNER JOIN LOCATIONS L1
+                                        ON D1.LOCATION_ID = L1.LOCATION_ID
+                                    INNER JOIN COUNTRIES C1
+                                        ON L1.COUNTRY_ID = C1.COUNTRY_ID
+                                    INNER JOIN REGIONS R1
+                                        ON C1.REGION_ID = R1.REGION_ID
+                WHERE R1.REGION_NAME = 'Europe')
+        WHERE RNK = 1)
+;
+
+--부서별 급여순위 4위에 해당하는 사원의 선임을 구하고 선임들의 도시별 최대 급여를 구하시오.
+SELECT AA.CITY, MAX(E3.SALARY)
+FROM EMPLOYEES E3 INNER JOIN (SELECT A1.* , L1.CITY
+                                FROM ( SELECT  E1.* ,D1.LOCATION_ID, RANK() OVER (PARTITION BY E1.DEPARTMENT_ID ORDER BY E1.SALARY DESC) RNK
+                                        FROM EMPLOYEES E1 INNER JOIN DEPARTMENTS D1
+                                                             ON E1.DEPARTMENT_ID = D1.DEPARTMENT_ID) A1
+                                            INNER JOIN EMPLOYEES E2
+                                            ON A1.MANAGER_ID = E2.EMPLOYEE_ID
+                                            INNER JOIN LOCATIONS L1
+                                            ON A1.LOCATION_ID = L1.LOCATION_ID
+                                WHERE RNK = 4) AA
+                    ON E3.DEPARTMENT_ID = AA.DEPARTMENT_ID
+GROUP BY AA.CITY
+;
