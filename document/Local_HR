@@ -262,3 +262,47 @@ FROM EMPLOYEES E3 INNER JOIN (SELECT A1.* , L1.CITY
                     ON E3.DEPARTMENT_ID = AA.DEPARTMENT_ID
 GROUP BY AA.CITY
 ;
+
+--시험--
+SELECT A1.배재현 , A1.JOB_TITLE , A1.CNT , A1.AVG_SAL
+FROM (SELECT L1.CITY AS 배재현 ,J1.JOB_TITLE , COUNT(*) AS CNT, RANK() OVER(PARTITION BY L1.CITY ORDER BY COUNT(*) DESC) RNK , ROUND(AVG(E1.SALARY),2) AS AVG_SAL
+        FROM EMPLOYEES E1 INNER JOIN DEPARTMENTS D1
+                                    ON E1.DEPARTMENT_ID = D1.DEPARTMENT_ID
+                            INNER JOIN LOCATIONS L1
+                                    ON D1.LOCATION_ID = L1.LOCATION_ID
+                            INNER JOIN JOBS J1
+                                    ON E1.JOB_ID = J1.JOB_ID
+        GROUP BY L1.CITY,L1.LOCATION_ID , J1.JOB_TITLE) A1
+WHERE A1.RNK = 1
+ORDER BY A1.배재현 , A1.JOB_TITLE
+;
+--입사일이 05년인 사원 중 , 급여가 5000이상이고, 최대 20등까지의 급여순위를 매기고
+--급여 순위가 일치한느 사원의 업무와 도시를 출력하시오.
+--정렬: 사원이름(오름차순)
+SELECT AA.FIRST_NAME || '_' ||AA.LAST_NAME  AS 사원이름, AA.SALARY , AA.RNK , AA.CITY , AA.JOB_TITLE,  AB.RNK
+FROM(SELECT E.*,RANK() OVER(ORDER BY SALARY DESC) RNK , J.JOB_TITLE , L.CITY
+        FROM EMPLOYEES E    INNER JOIN JOBS J
+                                    ON E.JOB_ID = J.JOB_ID
+                            INNER JOIN DEPARTMENTS D
+                                    ON E.DEPARTMENT_ID = D.DEPARTMENT_ID
+                            INNER JOIN LOCATIONS L
+                                    ON D.LOCATION_ID = L.LOCATION_ID
+        WHERE TO_CHAR(HIRE_DATE , 'YY') = 05 AND SALARY>=5000) AA
+        INNER JOIN ( SELECT RNK , COUNT(*)
+                        FROM(SELECT E.*,RANK() OVER(ORDER BY SALARY DESC) RNK
+                                               FROM EMPLOYEES E 
+                                                 WHERE TO_CHAR(HIRE_DATE , 'YY') = 05 AND SALARY>=5000)
+                        GROUP BY RNK
+                        HAVING COUNT(*) != 1) AB
+                        ON AA.RNK = AB.RNK
+;
+
+-- 퍼스트네임과 라스트네임에 e가 들어가는 사람들에게 50퍼센트 커미션을 추가로 주고, 
+-- 변화한 급여으로 인해 최고 급여을 벗어난 사람들의 업무별 급여 평균을 구하시오.
+-- 출력 : 잡타이틀, 연봉
+-- 급여 = 급여 * 커미션 -세금(10프로)
+-- 평균은 소수 첫째자리 까지
+SELECT EMPLOYEE_ID , SALARY, NVL(COMMISSION_PCT,0) + 0.5
+FROM EMPLOYEES
+WHERE FIRST_NAME LIKE '%E%' OR FIRST_NAME LIKE '%e%' OR LAST_NAME LIKE '%E%' OR LAST_NAME LIKE '%e%'
+;
