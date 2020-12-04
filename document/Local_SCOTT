@@ -413,6 +413,47 @@ FROM EMP E INNER JOIN (SELECT DEPTNO
 ORDER BY E.SAL DESC
 ;
 
+SELECT ENAME AS 배재현 , TO_CHAR(HIREDATE,'YYYY-MM-DD') AS HIREDATE
+FROM EMP
+WHERE TO_CHAR(HIREDATE,'DD') < 16
+ORDER BY ENAME ASC
+;
+
+--이름에 M이 들어가고 사번이 1500이상이며, 근무지가 보스턴 아닌 점원들의 급여등급을 구하시오 : 문재ㅎ후니형
+SELECT EMP.* , S.GRADE
+FROM EMP INNER JOIN SALGRADE S
+                ON EMP.SAL BETWEEN S.LOSAL AND S.HISAL
+WHERE ENAME LIKE '%M%'
+ORDER BY S.GRADE , EMP.SAL DESC , EMP.EMPNO DESC
+;
+--사원이 3명 이상인 업무에 대해 평균 급여를 출력하시오. : 엄선용
+--소수점 아래 두자리까지 남기고 반올림 하시오. 
+SELECT JOB , COUNT(*) , ROUND(AVG(SAL) , 2)
+FROM EMP 
+GROUP BY JOB
+HAVING COUNT(*) >= 3 
+;
+--급여등급이 2등급인 사원들의 평균 급여보다 적게 받는 사원 정보를 출력하시오. : 백정민
+--출력 : 사원번호 오름차순
+SELECT *
+FROM EMP
+WHERE SAL < (SELECT  AVG(E.SAL)
+                FROM EMP E INNER JOIN SALGRADE S
+                                    ON E.SAL BETWEEN S.LOSAL AND S.HISAL
+                WHERE S.GRADE = 2
+                GROUP BY S.GRADE)
+;
+--데이터에서 짝수일 입사자와 홀수일 입사자의 평균 급여의 합 : 정우진
+-- 단 소수점 다 없애고 출력할 것
+SELECT FLOOR(A.A+B.B) AS 평균급여의합
+FROM(SELECT AVG(SAL) AS A
+        FROM EMP
+        WHERE MOD(TO_CHAR(HIREDATE,'DD'),2) = 0) A
+                  INNER JOIN (SELECT AVG(SAL)AS B
+                                FROM EMP
+                                WHERE MOD(TO_CHAR(HIREDATE,'DD'),2) = 1) B
+                        ON 1=1
+;
 
 
 
